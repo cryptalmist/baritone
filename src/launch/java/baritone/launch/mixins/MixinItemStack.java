@@ -17,6 +17,8 @@
 
 package baritone.launch.mixins;
 
+import baritone.Baritone;
+
 import baritone.api.utils.accessor.IItemStack;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -41,23 +43,42 @@ public abstract class MixinItemStack implements IItemStack {
     @Shadow
     public abstract int getDamageValue();
 
+    // Added basic try-catch for robustness
     private void recalculateHash() {
-        baritoneHash = item == null ? -1 : item.hashCode() + getDamageValue();
+        try {
+            baritoneHash = item == null ? -1 : item.hashCode() + getDamageValue();
+        } catch (Exception e) {
+            System.err.println("[Baritone] MixinItemStack: Exception during recalculateHash!");
+            e.printStackTrace();
+            baritoneHash = -99; // Error hash
+        }
     }
 
-    @Inject(
-            method = "setDamageValue",
-            at = @At("TAIL")
-    )
+    @Inject(method = "<init>*", at = @At("RETURN"))
+    private void onInit(CallbackInfo ci) {
+        // --- MODIFICATION ---
+        if (Baritone.isGameReadyForBaritoneItemStackMixin) {
+            recalculateHash();
+        }
+        // --- END MODIFICATION ---
+    }
+
+    @Inject(method = "setDamageValue", at = @At("TAIL"))
     private void onItemDamageSet(CallbackInfo ci) {
-        recalculateHash();
+        // --- MODIFICATION ---
+        if (Baritone.isGameReadyForBaritoneItemStackMixin) {
+             recalculateHash();
+        }
+        // --- END MODIFICATION ---
     }
 
     @Override
     public int getBaritoneHash() {
-        // cannot do this in an init mixin because silentlib likes creating new
-        // items in getDamageValue, which we call in recalculateHash
-        if (baritoneHash == 0) recalculateHash();
+        // --- MODIFICATION ---
+        if (baritoneHash == 0 && Baritone.isGameReadyForBaritoneItemStackMixin) {
+            recalculateHash();
+        }
         return baritoneHash;
+        // --- END MODIFICATION ---
     }
 }

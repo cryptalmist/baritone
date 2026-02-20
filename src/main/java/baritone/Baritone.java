@@ -61,6 +61,8 @@ public class Baritone implements IBaritone {
         threadPool = new ThreadPoolExecutor(4, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS, new SynchronousQueue<>());
     }
 
+    public static volatile boolean isGameReadyForBaritoneItemStackMixin = false;
+
     private final Minecraft mc;
     private final Path directory;
 
