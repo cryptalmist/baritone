@@ -17,37 +17,35 @@
 
 package baritone.launch;
 
-// --- Required Imports ---
-import baritone.Baritone; // Import the main Baritone class to access the flag
+// ================= Imports =================
+import baritone.Baritone;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.neoforged.fml.javafmlmod.FMLJavaModLoadingContext;
-// --- End Imports ---
+// ===========================================
 
-@Mod("baritoe") // Ensure mod ID is correct
+@Mod("baritoe") // MUST match mods.toml
 public class BaritoneForgeModXD {
 
-    public BaritoneForgeModXD() {
-        // Get the Mod Event Bus
-        IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
-
-        // --- Register the listener for the FMLCommonSetupEvent ---
+    /**
+     * NeoForge injects the Mod Event Bus directly into the constructor.
+     * This replaces FMLJavaModLoadingContext from Forge.
+     */
+    public BaritoneForgeModXD(IEventBus modEventBus) {
         modEventBus.addListener(this::onCommonSetup);
     }
 
     /**
-     * This method is called during the FMLCommonSetupEvent phase.
-     * We use enqueueWork to ensure thread safety.
-     * This is where we signal that the game is ready for the ItemStack mixin logic.
+     * Called during the common setup phase.
+     * enqueueWork ensures this runs on the correct thread.
      */
     private void onCommonSetup(final FMLCommonSetupEvent event) {
         event.enqueueWork(() -> {
-            // Set the flag in the core Baritone class to true
+            // Signal that the game is ready for Baritone ItemStack mixin logic
             Baritone.isGameReadyForBaritoneItemStackMixin = true;
 
-            // Optional: Log that the flag has been set
-            System.out.println("[Baritone Mod Entry] CommonSetup: ItemStack mixin compatibility flag enabled.");
+            // Optional log
+            System.out.println("[Baritone] CommonSetup: ItemStack mixin compatibility flag enabled.");
         });
     }
 }
